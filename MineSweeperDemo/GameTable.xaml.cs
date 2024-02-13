@@ -2,15 +2,9 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Shapes;
-
-
-//using TileType = Services.Enums.TileEnum;
-//using Tile = Services.Models.TileModel;
-using Services.Enums;
 using Services.Models;
-
 using tileType = Services.Enums.TileEnum.TileType;
+using Services.Switch;
 
 
 
@@ -21,15 +15,22 @@ using tileType = Services.Enums.TileEnum.TileType;
 // 6# to optimize the code, create Two boards innitially, one for the answers and one for the UI, and then update the UI board according to the answers board
 // 6# maintain consistency using camalCase;
 // 7# rename variables to be more descriptive
+// 8# The first click should have zero chance of being a bomb
+// 9# No "Game Over" message
+// 10# No "You Win" message or check if won
+// 11# No "Flag" feature
+// 12# Settings are not fully implemented
+// 13# The hotbar is unfunctional
+// 14# 
 
 namespace MineSweeperDemo
 {
     public partial class GameTable : Page
     {
         private TileModel[,]? gameBoardAnswer;
-        private const int mineQuantity = 50;
+        private const int mineQuantity = 100;
         private const int tableSize = 20;
-        const int TileSize = 28;
+        const int TileSize = 30;
 
         public GameTable()
         {
@@ -51,25 +52,10 @@ namespace MineSweeperDemo
             Task task1 = Task.Run(() => PlaceMines());
             //Task task2 = Task.Run(() => CreateUIElements());
             CreateUIElements();
-
             await task1;
-
-            for (int i = 0; i < tableSize; i++)
-            {
-                for (int j = 0; j < tableSize; j++)
-                {
-                    Console.Write($"{gameBoardAnswer[i, j].Type}\t");
-                }
-                Console.WriteLine();
-            }
-
-
             Task task3 = Task.Run(() => CalculateNumbers());
-
             //await Task.WhenAll(task3, task2);
             await task3;
-
-
             CalculateNumbers();
         }
 
@@ -83,11 +69,6 @@ namespace MineSweeperDemo
                 int row = random.Next(0, tableSize);
                 int col = random.Next(0, tableSize);
 
-                //for (int i = 0; i < tableSize; i++)
-                //{
-                //    Console.WriteLine($"{i} [{row},{col}]");
-                //}
-
                 if (gameBoardAnswer != null && gameBoardAnswer[row, col].Type != tileType.Bomb)
                 {
                     gameBoardAnswer[row, col] = new TileModel(tileType.Bomb);
@@ -95,7 +76,6 @@ namespace MineSweeperDemo
                 }
             }
         }
-
 
         //private void CalculateNumbers()
         //{
@@ -187,8 +167,6 @@ namespace MineSweeperDemo
                         Content = "",
                         Width = TileSize,
                         Height = TileSize,
-                        //Background = Brushes.Gray,
-                        //Foreground = Brushes.Black
                     };
                     tileButton.Click += Tile_Click;
 
@@ -209,10 +187,7 @@ namespace MineSweeperDemo
                 return;
 
             int TileClickedType = (int)gameBoardAnswer![Row, Column].Type + 1;
-
             gameBoardAnswer![Row, Column].IsRevealed = true;
-
-            //gameGrid.Children.Remove(TileClicked);
 
             if (TileClickedType < 9)
             {
@@ -226,6 +201,7 @@ namespace MineSweeperDemo
             else if (TileClickedType == 10) // (int)tileType.Bomb + 1
             {
                 InsertTileClicked(Row, Column, "X");
+                GameOver();
             }
         }
 
@@ -257,15 +233,24 @@ namespace MineSweeperDemo
 
         private void InsertTileClicked(int x, int y, String text)
         {
-            TextBlock TextBlockTile = new TextBlock
+            SolidColorBrush ForeColor = new SolidColorBrush(TileTextColor.GetTileTextColor(text));
+
+            Border TextBlockTile = new Border
             {
-                Text = text,
-                TextAlignment = TextAlignment.Center,
-                FontSize = 16,
-                FontWeight = FontWeights.Bold,
-                Background = Brushes.White,
-                Width = TileSize,
-                Height = TileSize
+                BorderBrush = Brushes.Gray,
+                BorderThickness = new Thickness(1),
+                Child = new TextBlock
+                {
+                    Text = text,
+                    TextAlignment = TextAlignment.Center,
+                    FontSize = 16,
+                    Foreground = ForeColor,
+                    FontWeight = FontWeights.Bold,
+                    Background = Brushes.White,
+                    Width = TileSize - 2,
+                    Height = TileSize - 2,
+
+                }
             };
 
             gameGrid.Children.Remove((Button)gameGrid.Children.Cast<UIElement>().First(e => Grid.GetRow(e) == x && Grid.GetColumn(e) == y));
@@ -290,6 +275,21 @@ namespace MineSweeperDemo
             {
                 tileClicked.Content = "";
                 gameBoardAnswer![row, column].HasFlag = false;
+            }
+        }
+
+        private void GameOver()
+        {
+            for (int i = 0; i < tableSize; i++)
+            {
+                for (int j = 0; j < tableSize; j++)
+                {
+                    if (!gameBoardAnswer![i, j].IsRevealed && gameBoardAnswer![i, j].Type == tileType.Bomb)
+                    {
+                        
+                        InsertTileClicked(i, j, "X");
+                    }
+                }
             }
         }
     }

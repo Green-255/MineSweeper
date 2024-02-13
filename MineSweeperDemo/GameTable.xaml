@@ -17,13 +17,15 @@
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="20"/>
             <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="20"/>
         </Grid.ColumnDefinitions>
 
         <userControls:MenuBar x:Name="menuBar"
-                         Grid.Row="0" Grid.Column="0"/>
+                         Grid.Row="0" Grid.Column="1"/>
 
-        <Grid x:Name="gameGrid" Grid.Row="1" Grid.Column="0"
+        <Grid x:Name="gameGrid" Grid.Row="1" Grid.Column="1"
               HorizontalAlignment="Center" VerticalAlignment="Center">
 
         </Grid>
