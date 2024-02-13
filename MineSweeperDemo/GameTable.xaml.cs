@@ -212,50 +212,66 @@ namespace MineSweeperDemo
 
             gameBoardAnswer![Row, Column].IsRevealed = true;
 
-            TextBox TextBoxTile = new TextBox
+            //gameGrid.Children.Remove(TileClicked);
+
+            if (TileClickedType < 9)
             {
-                Text = "",
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center,
+                InsertTileClicked(Row, Column, TileClickedType.ToString());
+            }
+            else if (TileClickedType == 9) // (int)tileType.Empty + 1
+            {
+                InsertTileClicked(Row, Column, "");
+                UncoverAroundEmptyTile(Row, Column);
+            }
+            else if (TileClickedType == 10) // (int)tileType.Bomb + 1
+            {
+                InsertTileClicked(Row, Column, "X");
+            }
+        }
+
+        private void UncoverAroundEmptyTile(int x, int y)
+        {
+            for (int row = x - 1; row <= x + 1 && row >= 0 && row < tableSize; row++)
+            {
+                for (int col = y - 1; col <= y + 1 && col >= 0 && col < tableSize; col++)
+                {
+
+                    if (!gameBoardAnswer![row, col].IsRevealed) // "&& row != x" - not needed, because the middle tile is already revealed
+                    {
+                        gameBoardAnswer![row, col].IsRevealed = true;
+
+                        if (gameBoardAnswer![row, col].Type == tileType.Empty)
+                        {
+                            InsertTileClicked(row, col, "");
+                            UncoverAroundEmptyTile(row, col);
+                        }
+                        else
+                        {
+                            InsertTileClicked(row, col, ((int)gameBoardAnswer![row, col].Type + 1).ToString());
+                        }
+                    }
+                }
+
+            }
+        }
+
+        private void InsertTileClicked(int x, int y, String text)
+        {
+            TextBlock TextBlockTile = new TextBlock
+            {
+                Text = text,
+                TextAlignment = TextAlignment.Center,
+                FontSize = 16,
+                FontWeight = FontWeights.Bold,
                 Background = Brushes.White,
                 Width = TileSize,
                 Height = TileSize
             };
 
-            gameGrid.Children.Remove(TileClicked);
-
-            if (TileClickedType < 9)
-            {
-                TextBoxTile.Text = TileClickedType.ToString();
-            }
-            else if (TileClickedType == 10) // (int)tileType.Bomb + 1
-            {
-                TextBoxTile.Text = "X";
-            }
-            gameGrid.Children.Add(TextBoxTile);
-            Grid.SetRow(TextBoxTile, Row);
-            Grid.SetColumn(TextBoxTile, Column);
-        }
-
-
-        /// do ths method
-        private int UncoverAroundEmptyTile(int x, int y)
-        {
-            int count = 0;
-            for (int row = x - 1; row <= x + 1; row++)
-            {
-                for (int col = y - 1; col <= y + 1; col++)
-                {
-                    if (row >= 0 && row < tableSize && col >= 0 && col < tableSize && !(row == x && col == y))
-                    {
-                        if (gameBoardAnswer![row, col].Type == tileType.Bomb)
-                        {
-                            count++;
-                        }
-                    }
-                }
-            }
-            return count;
+            gameGrid.Children.Remove((Button)gameGrid.Children.Cast<UIElement>().First(e => Grid.GetRow(e) == x && Grid.GetColumn(e) == y));
+            gameGrid.Children.Add(TextBlockTile);
+            Grid.SetRow(TextBlockTile, x);
+            Grid.SetColumn(TextBlockTile, y);
         }
 
 
